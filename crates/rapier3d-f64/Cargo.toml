@@ -31,6 +31,9 @@ enhanced-determinism = [ "simba/libm_force", "parry3d-f64/enhanced-determinism" 
 debug-render = []
 profiler = [ "instant" ] # Enables the internal profiler.
 
+# Experimental features, not guaranteed to work or compile.
+experimental-voxel-fracture = [ ]
+
 # Feature used for debugging only.
 debug-disable-legitimate-fe-exceptions = [ ]
 

@@ -1,10 +1,13 @@
 //! Structure for combining the various physics components to perform an actual simulation.
 
 pub use collision_pipeline::CollisionPipeline;
-pub use event_handler::{ActiveEvents, ChannelEventCollector, EventHandler};
+pub use event_handler::{ActiveEvents, ChannelEventCollector, EventHandler, FractureEvent};
 pub use physics_hooks::{ActiveHooks, ContactModificationContext, PairFilterContext, PhysicsHooks};
 pub use physics_pipeline::PhysicsPipeline;
 pub use query_pipeline::{QueryFilter, QueryFilterFlags, QueryPipeline, QueryPipelineMode};
+
+#[cfg(feature = "experimental-voxel-fracture")]
+pub use voxel_fracture_pipeline::{VoxelFractureMaterial, VoxelFracturePipeline};
 
 #[cfg(feature = "debug-render")]
 pub use self::debug_render_pipeline::{
@@ -21,3 +24,5 @@ mod user_changes;
 
 #[cfg(feature = "debug-render")]
 mod debug_render_pipeline;
+#[cfg(feature = "experimental-voxel-fracture")]
+mod voxel_fracture_pipeline;

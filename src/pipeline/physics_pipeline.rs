@@ -191,11 +191,13 @@ impl PhysicsPipeline {
         }
 
         let mut manifolds = Vec::new();
+        let mut active_pairs = Vec::new();
         narrow_phase.select_active_contacts(
             islands,
             bodies,
             &mut self.contact_pair_indices,
             &mut manifolds,
+            &mut active_pairs,
             &mut self.manifold_indices,
         );
         impulse_joints.select_active_interactions(
@@ -507,6 +509,9 @@ impl PhysicsPipeline {
             };
 
         while remaining_substeps > 0 {
+            self.clear_modified_colliders(colliders, &mut modified_colliders);
+            removed_colliders.clear();
+
             // If there are more than one CCD substep, we need to split
             // the timestep into multiple intervals. First, estimate the
             // size of the time slice we will integrate for this substep.
@@ -581,7 +586,7 @@ impl PhysicsPipeline {
 
             // If CCD is enabled, execute the CCD motion clamping.
             if ccd_is_enabled {
-                // NOTE: don't the forces into account when updating the CCD active flags because
+                // NOTE: don't take the forces into account when updating the CCD active flags because
                 //       they have already been integrated into the velocities by the solver.
                 let ccd_active = ccd_solver.update_ccd_active_flags(
                     islands,

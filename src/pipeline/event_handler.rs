@@ -1,7 +1,14 @@
 use crate::dynamics::RigidBodySet;
-use crate::geometry::{ColliderSet, CollisionEvent, ContactForceEvent, ContactPair};
+use crate::geometry::{
+    ColliderHandle, ColliderSet, CollisionEvent, ContactForceEvent, ContactPair,
+};
 use crate::math::Real;
 use crossbeam::channel::Sender;
+
+pub struct FractureEvent {
+    pub fractured_collider: ColliderHandle,
+    pub fragments: Vec<ColliderHandle>,
+}
 
 bitflags::bitflags! {
     #[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
@@ -13,6 +20,9 @@ bitflags::bitflags! {
         /// If set, Rapier will call `EventHandler::handle_contact_force_event`
         /// whenever relevant for this collider.
         const CONTACT_FORCE_EVENTS = 0b0010;
+        /// If set, Rapier will call `EventHandler::handle_fracture_event` whenever this colliders
+        /// is fractured.
+        const FRACTURE_EVENTS = 0b0010;
     }
 }
 
@@ -66,6 +76,13 @@ pub trait EventHandler: Send + Sync {
         contact_pair: &ContactPair,
         total_force_magnitude: Real,
     );
+
+    fn handle_fracture_event(
+        &self,
+        bodies: &RigidBodySet,
+        colliders: &ColliderSet,
+        event: FractureEvent,
+    );
 }
 
 impl EventHandler for () {
@@ -87,12 +104,21 @@ impl EventHandler for () {
         _total_force_magnitude: Real,
     ) {
     }
+
+    fn handle_fracture_event(
+        &self,
+        _bodies: &RigidBodySet,
+        _colliders: &ColliderSet,
+        _event: FractureEvent,
+    ) {
+    }
 }
 
 /// A collision event handler that collects events into a crossbeam channel.
 pub struct ChannelEventCollector {
     collision_event_sender: Sender<CollisionEvent>,
     contact_force_event_sender: Sender<ContactForceEvent>,
+    fracture_event_sender: Sender<FractureEvent>,
 }
 
 impl ChannelEventCollector {
@@ -100,10 +126,12 @@ impl ChannelEventCollector {
     pub fn new(
         collision_event_sender: Sender<CollisionEvent>,
         contact_force_event_sender: Sender<ContactForceEvent>,
+        fracture_event_sender: Sender<FractureEvent>,
     ) -> Self {
         Self {
             collision_event_sender,
             contact_force_event_sender,
+            fracture_event_sender,
         }
     }
 }
@@ -129,5 +157,14 @@ impl EventHandler for ChannelEventCollector {
     ) {
         let result = ContactForceEvent::from_contact_pair(dt, contact_pair, total_force_magnitude);
         let _ = self.contact_force_event_sender.send(result);
+    }
+
+    fn handle_fracture_event(
+        &self,
+        _bodies: &RigidBodySet,
+        _colliders: &ColliderSet,
+        event: FractureEvent,
+    ) {
+        let _ = self.fracture_event_sender.send(event);
     }
 }

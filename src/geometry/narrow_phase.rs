@@ -1013,6 +1013,7 @@ impl NarrowPhase {
         bodies: &RigidBodySet,
         out_contact_pairs: &mut Vec<TemporaryInteractionIndex>,
         out_manifolds: &mut Vec<&'a mut ContactManifold>,
+        out_pairs: &mut Vec<TemporaryInteractionIndex>,
         out: &mut Vec<Vec<ContactManifoldIndex>>,
     ) {
         for out_island in &mut out[..islands.num_islands()] {

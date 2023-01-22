@@ -88,11 +88,13 @@ impl Harness {
     pub fn new_empty() -> Self {
         let collision_event_channel = crossbeam::channel::unbounded();
         let contact_force_event_channel = crossbeam::channel::unbounded();
+        let fracture_event_channel = crossbeam::channel::unbounded();
         let event_handler =
-            ChannelEventCollector::new(collision_event_channel.0, contact_force_event_channel.0);
+            ChannelEventCollector::new(collision_event_channel.0, contact_force_event_channel.0, fracture_event_channel.0);
         let events = PhysicsEvents {
             collision_events: collision_event_channel.1,
             contact_force_events: contact_force_event_channel.1,
+            fracture_events: fracture_event_channel.1,
         };
         let physics = PhysicsState::new();
         let state = RunState::new();
